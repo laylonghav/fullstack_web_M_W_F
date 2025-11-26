@@ -1,0 +1,99 @@
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../store/userSlice";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { request } from "@/util/request/request";
+import { setToken } from "@/store/tokenSlice";
+
+export default function LoginPage() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [data, setData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
+  async function onLogin(e) {
+    e.preventDefault();
+
+    try {
+      const res = await request("login", "post", data);
+      if (res?.error) {
+        if (res?.errors) {
+          setErrors(res?.errors);
+        }
+        return;
+      }
+
+      if (res) {
+        console.log("Logged in : ", res);
+        dispatch(setUser(res?.user));
+        dispatch(setToken(res?.token));
+        navigate("/");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  return (
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        // backgroundColor: "red",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <form
+        onSubmit={onLogin}
+        className="w-[400px] p-4 bg-gray-100 rounded-xl flex flex-col gap-4"
+      >
+        <h1 className="font-bold text-center">Login</h1>
+        <div className="grid gap-4">
+          <div className="grid gap-3">
+            <Label htmlFor="name-1">Email</Label>
+            <Input
+              type={"email"}
+              value={data?.email}
+              onChange={(e) => setData({ ...data, email: e.target.value })}
+              id="name-1"
+              name="name"
+              placeholder="Email"
+              // defaultValue="Pedro Duarte"
+            />
+            {errors.email && (
+              <p className="text-red-600 text-sm">{errors.email[0]}</p>
+            )}
+          </div>
+          <div className="grid gap-3">
+            <Label htmlFor="username-1">Password</Label>
+            <Input
+              value={data?.password}
+              onChange={(e) => setData({ ...data, password: e.target.value })}
+              id="username-1"
+              name="username"
+              placeholder="Password"
+              // defaultValue="@peduarte"
+            />
+            {errors.password && <p>{errors?.password[0]}</p>}
+          </div>
+        </div>
+        <div className="flex flex-col gap-3">
+          <Button type="submit">Login</Button>
+          <Button variant="outline">Cancel</Button>
+        </div>
+        <div className="text-center">
+          <span>I don't have an account?</span>
+          <NavLink
+            to="/auth/register"
+            className="text-blue-600 hover:underline"
+          >
+            Register
+          </NavLink>
+        </div>
+      </form>
+    </div>
+  );
+}
